@@ -1,11 +1,14 @@
 package com.fastcampus.flow.Controller;
 
+import com.fastcampus.flow.Dto.AllowUserResponse;
+import com.fastcampus.flow.Dto.AllowedUserResponse;
+import com.fastcampus.flow.Dto.RankNumberResponse;
+import com.fastcampus.flow.Dto.RegisterUserResponse;
+import com.fastcampus.flow.exception.ApplicationException;
 import com.fastcampus.flow.service.UserQueueService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -15,8 +18,29 @@ public class UserQueueController {
 
     private final UserQueueService userQueueService;
 
+
         @PostMapping("")
-        public Mono<?> registerUser(@RequestParam(name = "user_id") Long userId){
-            return userQueueService.registerWaitQueue(userId);
+        public Mono<RegisterUserResponse> registerUser(@RequestParam(name = "queue" , defaultValue = "default") String queue,
+                                                       @RequestParam(name = "user_id") Long userId){
+            return userQueueService.registerWaitQueue(queue, userId)
+                    .map(RegisterUserResponse::new);
         }
+
+        @PostMapping("allow")
+        public Mono<AllowUserResponse> allowUser(@RequestParam(name = "queue" , defaultValue = "default") String queue,
+                                                 @RequestParam(name = "count") Long count){
+                return userQueueService.allowUser(queue, count)
+                        .map(allowed -> new AllowUserResponse(count, allowed));
+        }
+        @GetMapping("/allowed")
+        public Mono<AllowedUserResponse> isAllowedUser(@RequestParam(name = "queue" , defaultValue = "default") String queue,
+                                     @RequestParam(name = "user_id") Long userId){
+           return userQueueService.isAllowed(queue, userId).map(AllowedUserResponse::new);
+        }
+
+    @GetMapping("/rank")
+    public Mono<RankNumberResponse> getRankUser(@RequestParam(name = "queue" , defaultValue = "default") String queue,
+                                                                        @RequestParam(name = "user_id") Long userId){
+        return userQueueService.getRank(queue, userId).map(RankNumberResponse::new);
+    }
 }
