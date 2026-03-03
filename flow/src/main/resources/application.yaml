@@ -12,7 +12,7 @@ management:
     enabled-by-default: false
 
 scheduler:
-  enabled: false
+  enabled: true
 
 ---
 
